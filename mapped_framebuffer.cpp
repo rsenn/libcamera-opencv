@@ -52,9 +52,7 @@ LOG_DECLARE_CATEGORY(Buffer)
 /**
  * \brief Construct an empty MappedBuffer
  */
-MappedBuffer::MappedBuffer()
-	: error_(0)
-{
+MappedBuffer::MappedBuffer() : error_(0) {
 }
 
 /**
@@ -67,34 +65,31 @@ MappedBuffer::MappedBuffer()
  *
  * No mappings are unmapped or destroyed in this process.
  */
-MappedBuffer::MappedBuffer(MappedBuffer &&other)
-{
-	*this = std::move(other);
+MappedBuffer::MappedBuffer(MappedBuffer&& other) {
+  *this = std::move(other);
 }
 
 /**
  * \brief Move assignment operator, replace the mappings with those of \a other
-* \param[in] other The other MappedBuffer
+ * \param[in] other The other MappedBuffer
  *
  * Moving a MappedBuffer moves the mappings contained in the \a other to the new
  * MappedBuffer and invalidates the \a other.
  *
  * No mappings are unmapped or destroyed in this process.
  */
-MappedBuffer &MappedBuffer::operator=(MappedBuffer &&other)
-{
-	error_ = other.error_;
-	planes_ = std::move(other.planes_);
-	maps_ = std::move(other.maps_);
-	other.error_ = -ENOENT;
+MappedBuffer&
+MappedBuffer::operator=(MappedBuffer&& other) {
+  error_ = other.error_;
+  planes_ = std::move(other.planes_);
+  maps_ = std::move(other.maps_);
+  other.error_ = -ENOENT;
 
-	return *this;
+  return *this;
 }
 
-MappedBuffer::~MappedBuffer()
-{
-	for (Plane &map : maps_)
-		munmap(map.data(), map.size());
+MappedBuffer::~MappedBuffer() {
+  for(Plane& map : maps_) munmap(map.data(), map.size());
 }
 
 /**
@@ -179,67 +174,60 @@ MappedBuffer::~MappedBuffer()
  * made as Read only, Write only or support Read and Write operations by setting
  * the MapFlag flags accordingly.
  */
-MappedFrameBuffer::MappedFrameBuffer(const FrameBuffer *buffer, MapFlags flags)
-{
-	ASSERT(!buffer->planes().empty());
-	planes_.reserve(buffer->planes().size());
+MappedFrameBuffer::MappedFrameBuffer(const FrameBuffer* buffer, MapFlags flags) {
+  ASSERT(!buffer->planes().empty());
+  planes_.reserve(buffer->planes().size());
 
-	int mmapFlags = 0;
+  int mmapFlags = 0;
 
-	if (flags & MapFlag::Read)
-		mmapFlags |= PROT_READ;
+  if(flags & MapFlag::Read)
+    mmapFlags |= PROT_READ;
 
-	if (flags & MapFlag::Write)
-		mmapFlags |= PROT_WRITE;
+  if(flags & MapFlag::Write)
+    mmapFlags |= PROT_WRITE;
 
-	struct MappedBufferInfo {
-		uint8_t *address = nullptr;
-		size_t mapLength = 0;
-		size_t dmabufLength = 0;
-	};
-	std::map<int, MappedBufferInfo> mappedBuffers;
+  struct MappedBufferInfo {
+    uint8_t* address = nullptr;
+    size_t mapLength = 0;
+    size_t dmabufLength = 0;
+  };
+  std::map<int, MappedBufferInfo> mappedBuffers;
 
-	for (const FrameBuffer::Plane &plane : buffer->planes()) {
-		const int fd = plane.fd.get();
-		if (mappedBuffers.find(fd) == mappedBuffers.end()) {
-			const size_t length = lseek(fd, 0, SEEK_END);
-			mappedBuffers[fd] = MappedBufferInfo{ nullptr, 0, length };
-		}
+  for(const FrameBuffer::Plane& plane : buffer->planes()) {
+    const int fd = plane.fd.get();
+    if(mappedBuffers.find(fd) == mappedBuffers.end()) {
+      const size_t length = lseek(fd, 0, SEEK_END);
+      mappedBuffers[fd] = MappedBufferInfo{nullptr, 0, length};
+    }
 
-		const size_t length = mappedBuffers[fd].dmabufLength;
+    const size_t length = mappedBuffers[fd].dmabufLength;
 
-		if (plane.offset > length ||
-		    plane.offset + plane.length > length) {
-			LOG(Buffer, Fatal) << "plane is out of buffer: "
-					   << "buffer length=" << length
-					   << ", plane offset=" << plane.offset
-					   << ", plane length=" << plane.length;
-			return;
-		}
-		size_t &mapLength = mappedBuffers[fd].mapLength;
-		mapLength = std::max(mapLength,
-				     static_cast<size_t>(plane.offset + plane.length));
-	}
+    if(plane.offset > length || plane.offset + plane.length > length) {
+      LOG(Buffer, Fatal) << "plane is out of buffer: "
+                         << "buffer length=" << length << ", plane offset=" << plane.offset << ", plane length=" << plane.length;
+      return;
+    }
+    size_t& mapLength = mappedBuffers[fd].mapLength;
+    mapLength = std::max(mapLength, static_cast<size_t>(plane.offset + plane.length));
+  }
 
-	for (const FrameBuffer::Plane &plane : buffer->planes()) {
-		const int fd = plane.fd.get();
-		auto &info = mappedBuffers[fd];
-		if (!info.address) {
-			void *address = mmap(nullptr, info.mapLength, mmapFlags,
-					     MAP_SHARED, fd, 0);
-			if (address == MAP_FAILED) {
-				error_ = -errno;
-				LOG(Buffer, Error) << "Failed to mmap plane: "
-						   << strerror(-error_);
-				return;
-			}
+  for(const FrameBuffer::Plane& plane : buffer->planes()) {
+    const int fd = plane.fd.get();
+    auto& info = mappedBuffers[fd];
+    if(!info.address) {
+      void* address = mmap(nullptr, info.mapLength, mmapFlags, MAP_SHARED, fd, 0);
+      if(address == MAP_FAILED) {
+        error_ = -errno;
+        LOG(Buffer, Error) << "Failed to mmap plane: " << strerror(-error_);
+        return;
+      }
 
-			info.address = static_cast<uint8_t *>(address);
-			maps_.emplace_back(info.address, info.mapLength);
-		}
+      info.address = static_cast<uint8_t*>(address);
+      maps_.emplace_back(info.address, info.mapLength);
+    }
 
-		planes_.emplace_back(info.address + plane.offset, plane.length);
-	}
+    planes_.emplace_back(info.address + plane.offset, plane.length);
+  }
 }
 
 } /* namespace libcamera */
