@@ -133,10 +133,11 @@ SimpleCam::cameraName(Camera* camera) {
 
   return name;
 }
-void
+
+/*void
 h(Request* r) {
   std::cout << "C\n";
-};
+};*/
 
 int
 SimpleCam::start() {
