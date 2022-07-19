@@ -89,7 +89,7 @@ SimpleCam::requestComplete(Request* request) {
     const std::vector<libcamera::Span<uint8_t>> mem = mappedBuffer.planes();
     cv::Mat image(height, width, CV_8UC1, (uint8_t*)(mem[0].data()));
     // static int i = 0;
-    cv::imwrite("images/img" + std::to_string((double)clock() / CLOCKS_PER_SEC) + ".png", image);
+    cv::imwrite("img" + std::to_string((double)clock() / CLOCKS_PER_SEC) + ".png", image);
   }
 
   /* Re-queue the Request to the camera. */
