@@ -23,23 +23,21 @@
 
 using namespace libcamera;
 
-class SimpleCam
-{
+class SimpleCam {
 public:
+  static void processRequest(Request* request);
+  static void requestComplete(Request* request);
+  std::string cameraName(Camera* camera);
 
-    static void processRequest(Request *request);
-    static void requestComplete(Request *request);
-    std::string cameraName(Camera *camera);
+  int start();
+  int go();
+  int finish();
 
-    int start();
-    int go();
-    int finish();
-
-    std::shared_ptr<Camera> camera;
-    EventLoop loop;
-    std::unique_ptr<std::thread> aThread;
-    Stream *stream;
-    FrameBufferAllocator *allocator;
-    std::unique_ptr<CameraManager> cm;
-    std::vector<std::unique_ptr<Request>> requests;
+  std::shared_ptr<Camera> camera;
+  EventLoop loop;
+  std::unique_ptr<std::thread> aThread;
+  Stream* stream;
+  FrameBufferAllocator* allocator;
+  std::unique_ptr<CameraManager> cm;
+  std::vector<std::unique_ptr<Request>> requests;
 };

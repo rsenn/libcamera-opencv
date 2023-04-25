@@ -18,43 +18,50 @@
 
 namespace libcamera {
 
-class MappedBuffer
-{
+class MappedBuffer {
 public:
-	using Plane = Span<uint8_t>;
+  using Plane = Span<uint8_t>;
 
-	~MappedBuffer();
+  ~MappedBuffer();
 
-	MappedBuffer(MappedBuffer &&other);
-	MappedBuffer &operator=(MappedBuffer &&other);
+  MappedBuffer(MappedBuffer&& other);
+  MappedBuffer& operator=(MappedBuffer&& other);
 
-	bool isValid() const { return error_ == 0; }
-	int error() const { return error_; }
-	const std::vector<Plane> &planes() const { return planes_; }
+  bool
+  isValid() const {
+    return error_ == 0;
+  }
+  int
+  error() const {
+    return error_;
+  }
+  const std::vector<Plane>&
+  planes() const {
+    return planes_;
+  }
 
 protected:
-	MappedBuffer();
+  MappedBuffer();
 
-	int error_;
-	std::vector<Plane> planes_;
-	std::vector<Plane> maps_;
+  int error_;
+  std::vector<Plane> planes_;
+  std::vector<Plane> maps_;
 
 private:
-	LIBCAMERA_DISABLE_COPY(MappedBuffer)
+  LIBCAMERA_DISABLE_COPY(MappedBuffer)
 };
 
-class MappedFrameBuffer : public MappedBuffer
-{
+class MappedFrameBuffer : public MappedBuffer {
 public:
-	enum class MapFlag {
-		Read = 1 << 0,
-		Write = 1 << 1,
-		ReadWrite = Read | Write,
-	};
+  enum class MapFlag {
+    Read = 1 << 0,
+    Write = 1 << 1,
+    ReadWrite = Read | Write,
+  };
 
-	using MapFlags = Flags<MapFlag>;
+  using MapFlags = Flags<MapFlag>;
 
-	MappedFrameBuffer(const FrameBuffer *buffer, MapFlags flags);
+  MappedFrameBuffer(const FrameBuffer* buffer, MapFlags flags);
 };
 
 LIBCAMERA_FLAGS_ENABLE_OPERATORS(MappedFrameBuffer::MapFlag)
