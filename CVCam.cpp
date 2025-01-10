@@ -62,13 +62,14 @@ CVCam::cameraName(Camera* camera) {
   const ControlList& props = camera->properties();
   std::string name;
 
-  switch(props.get(properties::Location)) {
+  switch(props.get(properties::Location).value()) {
     case properties::CameraLocationFront: name = "Internal front camera"; break;
     case properties::CameraLocationBack: name = "Internal back camera"; break;
     case properties::CameraLocationExternal:
       name = "External camera";
-      if(props.contains(properties::Model))
-        name += " '" + props.get(properties::Model) + "'";
+
+      if(props.contains(properties::Model.id()))
+        name += " '" + props.get(properties::Model).value() + "'";
       break;
   }
 
